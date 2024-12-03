@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Главная</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Подключите файл CSS -->
+</head>
+<body>
+<!-- Подключение навбара -->
+<div th:replace="navbar.html :: navbar"></div>
+
+<main style="text-align: center; padding: 50px;">
+    <h1>Добро пожаловать в систему учета платежей</h1>
+    <p>Эта система помогает управлять контрактами, платежами и статистикой. Пожалуйста, выберите нужный раздел в меню выше.</p>
+
+    <section style="margin-top: 30px;">
+        <a href="/contracts" class="btn">Управление контрактами</a>
+        <a href="/payments" class="btn">Управление платежами</a>
+        <a href="/statistics" class="btn">Просмотр статистики</a>
+        <a href="/about" class="btn">Об авторе</a>
+    </section>
+</main>
+
+<footer style="text-align: center; margin-top: 50px;">
+    <p>&copy; 2024 Payment Management System. All Rights Reserved.</p>
+</footer>
+</body>
+</html>

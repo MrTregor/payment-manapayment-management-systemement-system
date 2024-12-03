@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Платежи</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Подключите файл стилей -->
+</head>
+<body>
+<!-- Подключение навбара -->
+<div th:replace="navbar.html :: navbar"></div>
+
+<main style="padding: 20px;">
+    <h1>Платежи</h1>
+    <button onclick="openModal('addModal')" style="margin-bottom: 20px;">Добавить платеж</button>
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Дата</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Динамическое отображение платежей -->
+        <tr th:each="payment : ${payments}">
+            <td th:text="${payment.id}"></td>
+            <td th:text="${#dates.format(payment.paymentDate, 'dd-MM-yyyy')}"></td>
+            <td th:text="${payment.amount}"></td>
+            <td th:text="${payment.status}"></td>
+            <td>
+                <button onclick="openModal('editModal')" th:data-id="${payment.id}">Редактировать</button>
+                <button onclick="deletePayment(${payment.id})">Удалить</button>
+            </td>
+        </tr>
+        <!-- Сообщение при отсутствии платежей -->
+        <tr th:if="${#lists.isEmpty(payments)}">
+            <td colspan="5" style="text-align: center;">Нет платежей</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+
+<!-- Модальное окно для добавления -->
+<div id="addModal" class="modal" style="display: none;">
+    <form th:action="@{/payments/add}" method="post">
+        <h2>Добавить платеж</h2>
+        <label>Дата: <input type="date" name="paymentDate" required></label><br>
+        <label>Сумма: <input type="number" name="amount" step="0.01" required></label><br>
+        <label>Статус:
+            <select name="status">
+                <option value="PENDING">Ожидается</option>
+                <option value="COMPLETED">Завершён</option>
+                <option value="FAILED">Не выполнен</option>
+            </select>
+        </label><br>
+        <button type="submit">Сохранить</button>
+        <button type="button" onclick="closeModal('addModal')">Отмена</button>
+    </form>
+</div>
+
+<!-- Модальное окно для редактирования -->
+<div id="editModal" class="modal" style="display: none;">
+    <form th:action="@{/payments/edit}" method="post">
+        <h2>Редактировать платеж</h2>
+        <input type="hidden" name="id" th:value="${payment.id}">
+        <label>Дата: <input type="date" name="paymentDate" th:value="${payment.paymentDate}" required></label><br>
+        <label>Сумма: <input type="number" name="amount" th:value="${payment.amount}" step="0.01" required></label><br>
+        <label>Статус:
+            <select name="status" th:value="${payment.status}">
+                <option value="PENDING">Ожидается</option>
+                <option value="COMPLETED">Завершён</option>
+                <option value="FAILED">Не выполнен</option>
+            </select>
+        </label><br>
+        <button type="submit">Сохранить</button>
+        <button type="button" onclick="closeModal('editModal')">Отмена</button>
+    </form>
+</div>
+
+<footer style="text-align: center; margin-top: 20px;">
+    <p>&copy; 2024 Payment Management System. All Rights Reserved.</p>
+</footer>
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    function deletePayment(paymentId) {
+        fetch('/payments/delete/' + paymentId, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Не удалось удалить платеж');
+                }
+            });
+    }
+</script>
+</body>
+</html>

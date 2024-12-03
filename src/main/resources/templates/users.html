@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление пользователями</title>
+    <link rel="stylesheet" href="/css/styles.css"> <!-- Подключение файла стилей -->
+</head>
+<body>
+<!-- Подключение навбара -->
+<div th:replace="navbar.html :: navbar"></div>
+
+<main style="padding: 20px;">
+    <h1>Пользователи</h1>
+    <button onclick="openModal('addModal')" style="margin-bottom: 20px;">Добавить пользователя</button>
+    <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Роли</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Динамическое отображение пользователей -->
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.fullName}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.roles.stream().map(r -> r.name).collect(Collectors.joining(', '))}"></td>
+            <td>
+                <button onclick="openModal('editModal')" th:data-id="${user.id}">Редактировать</button>
+                <button onclick="deleteUser(${user.id})">Удалить</button>
+            </td>
+        </tr>
+        <!-- Сообщение при отсутствии пользователей -->
+        <tr th:if="${#lists.isEmpty(users)}">
+            <td colspan="5" style="text-align: center;">Нет пользователей</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+
+<!-- Модальное окно для добавления -->
+<div id="addModal" class="modal" style="display: none;">
+    <form th:action="@{/users/add}" method="post">
+        <h2>Добавить пользователя</h2>
+        <label>Полное имя: <input type="text" name="fullName" required></label><br>
+        <label>Email: <input type="email" name="email" required></label><br>
+        <label>Пароль: <input type="password" name="password" required></label><br>
+        <label>Роли:
+            <select name="roles" multiple>
+                <option value="ROLE_USER">Пользователь</option>
+                <option value="ROLE_ADMIN">Администратор</option>
+                <option value="ROLE_MANAGER">Менеджер</option>
+            </select>
+        </label><br>
+        <button type="submit">Сохранить</button>
+        <button type="button" onclick="closeModal('addModal')">Отмена</button>
+    </form>
+</div>
+
+<!-- Модальное окно для редактирования -->
+<div id="editModal" class="modal" style="display: none;">
+    <form th:action="@{/users/edit}" method="post">
+        <h2>Редактировать пользователя</h2>
+        <input type="hidden" name="id" th:value="${user.id}">
+        <label>Полное имя: <input type="text" name="fullName" th:value="${user.fullName}" required></label><br>
+        <label>Email: <input type="email" name="email" th:value="${user.email}" required></label><br>
+        <label>Роли:
+            <select name="roles" multiple>
+                <option value="ROLE_USER" th:selected="${user.roles.contains('ROLE_USER')}">Пользователь</option>
+                <option value="ROLE_ADMIN" th:selected="${user.roles.contains('ROLE_ADMIN')}">Администратор</option>
+                <option value="ROLE_MANAGER" th:selected="${user.roles.contains('ROLE_MANAGER')}">Менеджер</option>
+            </select>
+        </label><br>
+        <button type="submit">Сохранить</button>
+        <button type="button" onclick="closeModal('editModal')">Отмена</button>
+    </form>
+</div>
+
+<footer style="text-align: center; margin-top: 20px;">
+    <p>&copy; 2024 Payment Management System. All Rights Reserved.</p>
+</footer>
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    function deleteUser(userId) {
+        fetch('/users/delete/' + userId, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Не удалось удалить пользователя');
+                }
+            });
+    }
+</script>
+</body>
+</html>
