@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/auth")
 @Validated
@@ -31,6 +33,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
+
+    @GetMapping("/login")
+    public ResponseEntity<Void> redirectToFrontendLoginPage() {
+        URI loginPageUri = URI.create("http://localhost:3000/login"); // URL фронтенда
+        return ResponseEntity.status(HttpStatus.FOUND).location(loginPageUri).build();
+    }
+
+
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserDTO userDTO) {

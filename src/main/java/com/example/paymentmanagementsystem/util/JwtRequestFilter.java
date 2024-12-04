@@ -1,9 +1,7 @@
 package com.example.paymentmanagementsystem.util;
 
 import com.example.paymentmanagementsystem.service.UserService;
-import com.example.paymentmanagementsystem.service.impl.UserServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +30,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
+        // Исключение для маршрутов, начинающихся с /auth/
+        if (request.getRequestURI().startsWith("/auth/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final String requestTokenHeader = request.getHeader("Authorization");
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
@@ -67,4 +72,3 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }
-
