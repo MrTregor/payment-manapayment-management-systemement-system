@@ -1,3 +1,4 @@
+//AuthController.java
 package com.example.paymentmanagementsystem.controller;
 
 import com.example.paymentmanagementsystem.dto.LoginRequest;
@@ -34,14 +35,6 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<Void> redirectToFrontendLoginPage() {
-        URI loginPageUri = URI.create("http://localhost:3000/login"); // URL фронтенда
-        return ResponseEntity.status(HttpStatus.FOUND).location(loginPageUri).build();
-    }
-
-
-
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserDTO userDTO) {
         try {
@@ -50,5 +43,11 @@ public class AuthController {
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists");
         }
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<Void> redirectToFrontendLoginPage() {
+        URI loginPageUri = URI.create("http://localhost:3000/login");
+        return ResponseEntity.status(HttpStatus.FOUND).location(loginPageUri).build();
     }
 }

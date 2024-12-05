@@ -1,10 +1,7 @@
+//Role.java
 package com.example.paymentmanagementsystem.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import jakarta.persistence.*;
 import java.util.Set;
@@ -27,4 +24,9 @@ public class Role {
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users; // Пользователи, которым назначена эта роль
+
+    // Пользовательский конструктор для создания роли по имени
+    public Role(String name) {
+        this.name = name;
+    }
 }

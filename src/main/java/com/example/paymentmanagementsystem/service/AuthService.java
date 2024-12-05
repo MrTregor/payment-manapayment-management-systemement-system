@@ -7,7 +7,7 @@ import com.example.paymentmanagementsystem.model.Role;
 import com.example.paymentmanagementsystem.model.User;
 import com.example.paymentmanagementsystem.repository.RoleRepository;
 import com.example.paymentmanagementsystem.repository.UserRepository;
-import com.example.paymentmanagementsystem.security.JwtTokenProvider;
+import com.example.paymentmanagementsystem.config.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,17 +35,26 @@ public class AuthService {
 
     @Transactional
     public JwtResponse login(LoginRequest loginRequest) {
+        System.out.println("AuthService login attempt for email: " + loginRequest.getEmail());
         Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
 
-        if (userOptional.isEmpty() ||
-                !passwordEncoder.matches(loginRequest.getPassword(), userOptional.get().getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+        if (userOptional.isEmpty()) {
+            System.err.println("Email not found: " + loginRequest.getEmail());
+            throw new IllegalArgumentException("Email not found");
         }
 
         User user = userOptional.get();
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            System.err.println("Invalid password for email: " + loginRequest.getEmail());
+            throw new IllegalArgumentException("Invalid password");
+        }
+
         String token = jwtTokenProvider.generateToken(user);
+        System.out.println("Login successful for email: " + loginRequest.getEmail());
         return new JwtResponse(token);
     }
+
+
 
     @Transactional
     public void register(UserDTO userDTO) {

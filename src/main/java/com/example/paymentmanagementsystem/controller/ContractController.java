@@ -3,6 +3,7 @@ package com.example.paymentmanagementsystem.controller;
 import com.example.paymentmanagementsystem.dto.ContractDTO;
 import com.example.paymentmanagementsystem.service.ContractService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +22,14 @@ public class ContractController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<List<ContractDTO>> getAllContracts() {
         List<ContractDTO> contracts = contractService.getAllContracts();
         return ResponseEntity.ok(contracts);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<String> addContract(@Valid @RequestBody ContractDTO contractDTO) {
         contractService.addContract(contractDTO);
         return ResponseEntity.ok("Contract added successfully");
@@ -43,6 +46,7 @@ public class ContractController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<String> deleteContract(@PathVariable Long id) {
         boolean deleted = contractService.deleteContract(id);
         if (deleted) {
