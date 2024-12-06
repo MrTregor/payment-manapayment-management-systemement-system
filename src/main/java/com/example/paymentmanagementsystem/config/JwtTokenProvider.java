@@ -27,8 +27,8 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secret) {
         try {
-            // Кодирование секретного ключа в Base64
-            byte[] keyBytes = Base64.getEncoder().encode(secret.getBytes());
+            // Правильное создание ключа
+            byte[] keyBytes = Base64.getDecoder().decode(secret);
             this.key = Keys.hmacShaKeyFor(keyBytes);
         } catch (Exception e) {
             logger.error("Error creating JWT key", e);
@@ -58,10 +58,10 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            logger.error("JWT Token has expired: {}", e.getMessage());
+            logger.error("Token expired: {}", e.getMessage());
             return false;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            logger.error("Invalid token: {}", e.getMessage());
             return false;
         }
     }

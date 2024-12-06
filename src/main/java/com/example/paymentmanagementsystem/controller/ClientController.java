@@ -1,8 +1,10 @@
 package com.example.paymentmanagementsystem.controller;
 
+import com.example.paymentmanagementsystem.dto.ClientDTO;
 import com.example.paymentmanagementsystem.dto.ContractDTO;
 import com.example.paymentmanagementsystem.dto.PaymentDTO;
 import com.example.paymentmanagementsystem.model.User;
+import com.example.paymentmanagementsystem.service.ClientService;
 import com.example.paymentmanagementsystem.service.ContractService;
 import com.example.paymentmanagementsystem.service.PaymentService;
 import com.example.paymentmanagementsystem.service.UserService;
@@ -20,11 +22,19 @@ public class ClientController {
     private final ContractService contractService;
     private final PaymentService paymentService;
     private final UserService userService; // Добавлено для работы с пользователями
+    private final ClientService clientService;
 
-    public ClientController(ContractService contractService, PaymentService paymentService, UserService userService) {
+    public ClientController(ContractService contractService, PaymentService paymentService, UserService userService, ClientService clientService) {
         this.contractService = contractService;
         this.paymentService = paymentService;
         this.userService = userService;
+        this.clientService = clientService;
+    }
+
+    @GetMapping
+    public List<ClientDTO> getAllClients() {
+        System.out.println("getAllClients()");
+        return clientService.getAllClients();
     }
 
     @GetMapping("/contracts")

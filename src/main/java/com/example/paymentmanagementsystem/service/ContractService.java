@@ -19,6 +19,9 @@ public interface ContractService {
 
     List<ContractDTO> getAllContracts();
 
+    // Метод для получения контрактов с учетом роли пользователя
+    List<ContractDTO> getAllContractsForUser(String email);
+
     void addContract(ContractDTO contractDTO);
 
     boolean updateContract(Long id, ContractDTO contractDTO);

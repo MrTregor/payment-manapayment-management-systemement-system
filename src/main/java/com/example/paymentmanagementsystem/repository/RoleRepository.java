@@ -10,7 +10,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     // Найти роль по имени
     Optional<Role> findByName(String name);
-
     // Проверить существование роли по имени
     boolean existsByName(String name);
+
 }

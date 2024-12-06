@@ -6,7 +6,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class JwtResponse {
+    // Геттер обязателен
     private String token;
+
+    public JwtResponse(String token) {
+        this.token = token;
+    }
+
 }

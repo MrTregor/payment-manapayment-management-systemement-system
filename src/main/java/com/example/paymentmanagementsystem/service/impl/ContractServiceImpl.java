@@ -1,24 +1,52 @@
 package com.example.paymentmanagementsystem.service.impl;
-
+import com.example.paymentmanagementsystem.model.Role;
 import com.example.paymentmanagementsystem.dto.ContractDTO;
 import com.example.paymentmanagementsystem.model.Contract;
 import com.example.paymentmanagementsystem.model.ContractStatus;
+import com.example.paymentmanagementsystem.model.User;
 import com.example.paymentmanagementsystem.repository.ContractRepository;
+import com.example.paymentmanagementsystem.repository.UserRepository;
 import com.example.paymentmanagementsystem.service.ContractService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class ContractServiceImpl implements ContractService {
 
     private final ContractRepository contractRepository;
+    private final UserRepository userRepository;
 
-    public ContractServiceImpl(ContractRepository contractRepository) {
+    public ContractServiceImpl(ContractRepository contractRepository, UserRepository userRepository) {
         this.contractRepository = contractRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public List<ContractDTO> getAllContractsForUser(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Получаем роли пользователя
+        Set<String> roles = user.getRoles().stream()
+            .map(Role::getName)
+            .collect(Collectors.toSet());
+
+        // Если роль ADMIN или MANAGER - возвращаем все контракты
+        if (roles.contains("ADMIN") || roles.contains("MANAGER")) {
+            return contractRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        }
+
+        // Если CLIENT - возвращаем только его контракты
+        return contractRepository.findByClientId(user.getId()).stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -57,7 +85,18 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     public void addContract(ContractDTO contractDTO) {
-        Contract contract = convertToEntity(contractDTO);
+        Contract contract = new Contract();
+        contract.setContractNumber(contractDTO.getContractNumber());
+        contract.setStartDate(contractDTO.getStartDate());
+        contract.setEndDate(contractDTO.getEndDate());
+        contract.setAmount(contractDTO.getAmount());
+        contract.setStatus(ContractStatus.valueOf(contractDTO.getStatus()));
+
+        // Убедитесь, что clientId установлен
+        User client = userRepository.findById(contractDTO.getClientId())
+                .orElseThrow(() -> new RuntimeException("Client not found"));
+        contract.setClient(client);
+
         contractRepository.save(contract);
     }
 
@@ -99,7 +138,7 @@ public class ContractServiceImpl implements ContractService {
         Optional<Contract> contractOptional = contractRepository.findById(id);
         if (contractOptional.isPresent()) {
             Contract contract = contractOptional.get();
-            contract.setStatus(ContractStatus.valueOf(status));
+            contract.setStatus(ContractStatus.valueOf(status)); // Убедитесь, что статус корректен
             contractRepository.save(contract);
             return true;
         }

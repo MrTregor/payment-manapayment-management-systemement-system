@@ -43,7 +43,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 String jwtToken = requestTokenHeader.substring(7);
 
                 try {
-                    // Детальная отладка
                     logger.debug("Received token: {}", jwtToken);
 
                     String username = jwtTokenUtil.getUsernameFromToken(jwtToken);
@@ -51,6 +50,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                         UserDetails userDetails = userService.loadUserByUsername(username);
 
+                        // Проверяем валидность токена
                         if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
                             UsernamePasswordAuthenticationToken authToken =
                                     new UsernamePasswordAuthenticationToken(
@@ -62,17 +62,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                             SecurityContextHolder.getContext().setAuthentication(authToken);
                         }
                     }
-                } catch (SignatureException e) {
-                    logger.error("JWT Signature validation failed", e);
+                } catch (Exception e) {
+                    logger.error("JWT token validation error", e);
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid token signature");
+                    response.getWriter().write("Invalid token");
                     return;
                 }
             }
-        } catch (Exception e) {
-            logger.error("JWT token validation error", e);
-        }
 
-        chain.doFilter(request, response);
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            logger.error("Unexpected error in JWT filter", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }

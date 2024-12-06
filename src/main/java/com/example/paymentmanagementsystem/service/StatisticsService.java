@@ -6,4 +6,5 @@ public interface StatisticsService {
 
     // Генерация статистических данных
     Map<String, Object> generateStatistics();
+
 }

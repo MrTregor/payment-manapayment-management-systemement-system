@@ -6,18 +6,18 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenUtil {
@@ -26,14 +26,31 @@ public class JwtTokenUtil {
     @Value("${jwt.secret}")
     private String secret;
 
+    private Key signingKey;
+
+    @PostConstruct
+    public void init() {
+        // Правильное создание ключа
+        byte[] keyBytes = Base64.getDecoder().decode(secret);
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+
+        // Добавляем роли с префиксом ROLE_
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        claims.put("roles", roles);
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 24 часа
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 день
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -47,23 +64,10 @@ public class JwtTokenUtil {
         }
     }
 
-    private Key getSigningKey() {
-        try {
-            // Убедитесь, что ключ правильно декодируется
-            byte[] keyBytes = Base64.getDecoder().decode(
-                    Base64.getEncoder().encodeToString(secret.getBytes())
-            );
-            return Keys.hmacShaKeyFor(keyBytes);
-        } catch (Exception e) {
-            logger.error("Error creating signing key", e);
-            throw new RuntimeException("Cannot create signing key", e);
-        }
-    }
-
     public String getUsernameFromToken(String token) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
@@ -74,10 +78,22 @@ public class JwtTokenUtil {
         }
     }
 
+    public Claims getAllClaimsFromToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(signingKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            logger.error("Error extracting claims from token", e);
+            throw new RuntimeException("Cannot extract claims from token", e);
+        }
+    }
     private boolean isTokenExpired(String token) {
         try {
             Date expiration = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody()

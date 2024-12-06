@@ -8,6 +8,12 @@ import com.example.paymentmanagementsystem.model.User;
 import com.example.paymentmanagementsystem.repository.RoleRepository;
 import com.example.paymentmanagementsystem.repository.UserRepository;
 import com.example.paymentmanagementsystem.config.JwtTokenProvider;
+import com.example.paymentmanagementsystem.util.JwtTokenUtil;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,39 +28,46 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository,
-                       RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider) {
+    public AuthService(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider,
+            JwtTokenUtil jwtTokenUtil,
+            AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.authenticationManager = authenticationManager;
     }
 
     @Transactional
     public JwtResponse login(LoginRequest loginRequest) {
-        System.out.println("AuthService login attempt for email: " + loginRequest.getEmail());
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
+        try {
+            // Аутентификация
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        if (userOptional.isEmpty()) {
-            System.err.println("Email not found: " + loginRequest.getEmail());
-            throw new IllegalArgumentException("Email not found");
+            // Получаем UserDetails
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // Генерируем токен с ролями
+            String token = jwtTokenUtil.generateToken(userDetails);
+
+            return new JwtResponse(token);
+        } catch (BadCredentialsException e) {
+            throw new IllegalArgumentException("Invalid credentials");
         }
-
-        User user = userOptional.get();
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            System.err.println("Invalid password for email: " + loginRequest.getEmail());
-            throw new IllegalArgumentException("Invalid password");
-        }
-
-        String token = jwtTokenProvider.generateToken(user);
-        System.out.println("Login successful for email: " + loginRequest.getEmail());
-        return new JwtResponse(token);
     }
-
-
 
     @Transactional
     public void register(UserDTO userDTO) {

@@ -22,7 +22,7 @@ public class ContractController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CLIENT')")
     public ResponseEntity<List<ContractDTO>> getAllContracts() {
         List<ContractDTO> contracts = contractService.getAllContracts();
         return ResponseEntity.ok(contracts);

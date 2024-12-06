@@ -99,4 +99,51 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(paymentDTO.getStatus()); // Преобразование String в PaymentStatus
         paymentRepository.save(payment);
     }
+
+
+
+
+    @Override
+    public void confirmPayment(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        payment.setStatus(PaymentStatus.CONFIRMED);
+        paymentRepository.save(payment);
+    }
+
+    @Override
+    public boolean updatePayment(Long paymentId, PaymentDTO paymentDTO) {
+        Payment existingPayment = paymentRepository.findById(paymentId)
+                .orElse(null);
+
+        if (existingPayment == null) {
+            return false;
+        }
+
+        // Обновление полей платежа
+        existingPayment.setAmount(paymentDTO.getAmount());
+        existingPayment.setPaymentDate(paymentDTO.getPaymentDate());
+        // Добавьте другие необходимые поля
+
+        paymentRepository.save(existingPayment);
+        return true;
+    }
+
+    @Override
+    public List<PaymentDTO> getPaymentsByContractId(Long contractId) {
+        return paymentRepository.findByContractId(contractId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Методы конвертации
+    private Payment convertToEntity(PaymentDTO dto) {
+        Payment payment = new Payment();
+        payment.setAmount(dto.getAmount());
+        payment.setPaymentDate(dto.getPaymentDate());
+        // Другие поля
+        return payment;
+    }
+
 }

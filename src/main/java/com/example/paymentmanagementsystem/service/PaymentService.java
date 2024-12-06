@@ -24,5 +24,9 @@ public interface PaymentService {
     List<PaymentDTO> getAllPayments(); // Добавлено
 
     void addPayment(PaymentDTO paymentDTO); // Добавлено
+    List<PaymentDTO> getPaymentsByContractId(Long contractId);
+
+    void confirmPayment(Long paymentId);
+    boolean updatePayment(Long paymentId, PaymentDTO paymentDTO);
 }
 
